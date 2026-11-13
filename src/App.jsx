@@ -1,4 +1,3 @@
-
 import { useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 
@@ -12,6 +11,10 @@ import {
   CircularProgress,
   CssBaseline,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Drawer,
   IconButton,
   List,
@@ -19,12 +22,6 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Toolbar,
   Typography,
 } from '@mui/material'
@@ -37,6 +34,8 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital'
 
 import { DataGrid } from '@mui/x-data-grid'
+
+import VisibilityIcon from '@mui/icons-material/Visibility'
 
 const drawerWidth = 240
 
@@ -59,36 +58,55 @@ function App() {
       field: 'tipo_documento',
       headerName: 'Tipo Doc.',
       width: 110,
-      valueFormatter: (value) => value ?? '—',
+valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'numero_documento',
       headerName: 'N.º Documento',
       width: 155,
-      valueFormatter: (value) => value ?? '—',
+valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'correo',
       headerName: 'Correo electrónico',
       flex: 1,
       minWidth: 220,
-      valueFormatter: (value) => value ?? '—',
+valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'estado',
       headerName: 'Estado',
       width: 130,
-      renderCell: (params) => (
+renderCell: (params) => (
         <Chip
-          label={params.value}
-          color={
+label={params.value}
+color={
             params.value === 'ACTIVO'
               ? 'success'
               : 'default'
           }
-          size="small"
-          variant="outlined"
+size="small"
+variant="outlined"
         />
+      ),
+    },
+    {
+      field: 'acciones',
+      headerName: 'Acciones',
+      width: 125,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Button
+          size="small"
+          startIcon={<VisibilityIcon />}
+          onClick={(event) => {
+            event.stopPropagation()
+            setPacienteSeleccionado(params.row)
+          }}
+        >
+          Ver
+        </Button>
       ),
     },
   ]
@@ -102,11 +120,13 @@ function App() {
   const [errorConsulta, setErrorConsulta] = useState('')
   const [consultado, setConsultado] = useState(false)
 
+  const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null)
+
   const consultarPacientes = async () => {
-    setCargando(true)
-    setErrorConsulta('')
-    setPacientes([])
-    setConsultado(false)
+setCargando(true)
+setErrorConsulta('')
+setPacientes([])
+setConsultado(false)
 
     try {
       const token = auth.user?.access_token
@@ -159,23 +179,23 @@ function App() {
         throw new Error('La API devolvió una respuesta inesperada.')
       }
 
-      setPacientes(data.pacientes)
-      setConsultado(true)
+setPacientes(data.pacientes)
+setConsultado(true)
     } catch (error) {
-      setErrorConsulta(
+setErrorConsulta(
         error instanceof Error
           ? error.message
           : 'No se pudo consultar pacientes.'
       )
     } finally {
-      setCargando(false)
+setCargando(false)
     }
   }
 
   if (auth.isLoading) {
     return (
       <Box
-        sx={{
+sx={{
           minHeight: '100vh',
           display: 'flex',
           alignItems: 'center',
@@ -196,8 +216,8 @@ function App() {
           {auth.error.message}
         </Alert>
         <Button
-          variant="contained"
-          onClick={() => auth.signinRedirect()}
+variant="contained"
+onClick={() => auth.signinRedirect()}
         >
           Reintentar autenticación
         </Button>
@@ -210,7 +230,7 @@ function App() {
       <>
         <CssBaseline />
         <Box
-          sx={{
+sx={{
             minHeight: '100vh',
             display: 'flex',
             alignItems: 'center',
@@ -220,8 +240,8 @@ function App() {
           }}
         >
           <Paper
-            elevation={3}
-            sx={{
+elevation={3}
+sx={{
               p: 5,
               textAlign: 'center',
               maxWidth: 420,
@@ -230,8 +250,8 @@ function App() {
             }}
           >
             <LocalHospitalIcon
-              color="primary"
-              sx={{ fontSize: 54, mb: 2 }}
+color="primary"
+sx={{ fontSize: 54, mb: 2 }}
             />
 
             <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -243,10 +263,10 @@ function App() {
             </Typography>
 
             <Button
-              variant="contained"
-              size="large"
-              fullWidth
-              onClick={() => auth.signinRedirect()}
+variant="contained"
+size="large"
+fullWidth
+onClick={() => auth.signinRedirect()}
             >
               Iniciar sesión con Descope
             </Button>
@@ -271,8 +291,8 @@ function App() {
 
       <List>
         <ListItemButton
-          selected
-          onClick={() => setMobileOpen(false)}
+selected
+onClick={() => setMobileOpen(false)}
         >
           <ListItemIcon>
             <PeopleIcon />
@@ -285,8 +305,8 @@ function App() {
             <HistoryIcon />
           </ListItemIcon>
           <ListItemText
-            primary="Historial"
-            secondary="Próximamente"
+primary="Historial"
+secondary="Próximamente"
           />
         </ListItemButton>
       </List>
@@ -299,32 +319,32 @@ function App() {
 
       <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f6f8' }}>
         <AppBar
-          position="fixed"
-          sx={{
-            zIndex: (theme) => theme.zIndex.drawer + 1,
+position="fixed"
+sx={{
+zIndex: (theme) => theme.zIndex.drawer + 1,
           }}
         >
           <Toolbar>
             <IconButton
-              color="inherit"
-              edge="start"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              sx={{ mr: 2, display: { sm: 'none' } }}
-              aria-label="Abrir menú"
+color="inherit"
+edge="start"
+onClick={() => setMobileOpen(!mobileOpen)}
+sx={{ mr: 2, display: { sm: 'none' } }}
+aria-label="Abrir menú"
             >
               <MenuIcon />
             </IconButton>
 
             <Typography
-              variant="h6"
-              noWrap
-              sx={{ flexGrow: 1 }}
+variant="h6"
+noWrap
+sx={{ flexGrow: 1 }}
             >
               Gestión de Pacientes
             </Typography>
 
             <Avatar
-              sx={{
+sx={{
                 width: 32,
                 height: 32,
                 bgcolor: 'secondary.main',
@@ -335,17 +355,17 @@ function App() {
             </Avatar>
 
             <Typography
-              variant="body2"
-              sx={{ mr: 2, display: { xs: 'none', md: 'block' } }}
+variant="body2"
+sx={{ mr: 2, display: { xs: 'none', md: 'block' } }}
             >
               {email}
             </Typography>
 
             <IconButton
-              color="inherit"
-              onClick={() => auth.removeUser()}
-              aria-label="Cerrar sesión local"
-              title="Cerrar sesión local"
+color="inherit"
+onClick={() => auth.removeUser()}
+aria-label="Cerrar sesión local"
+title="Cerrar sesión local"
             >
               <LogoutIcon />
             </IconButton>
@@ -353,15 +373,15 @@ function App() {
         </AppBar>
 
         <Box
-          component="nav"
-          sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+component="nav"
+sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
         >
           <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            onClose={() => setMobileOpen(false)}
-            ModalProps={{ keepMounted: true }}
-            sx={{
+variant="temporary"
+open={mobileOpen}
+onClose={() => setMobileOpen(false)}
+ModalProps={{ keepMounted: true }}
+sx={{
               display: { xs: 'block', sm: 'none' },
               '& .MuiDrawer-paper': {
                 width: drawerWidth,
@@ -373,8 +393,8 @@ function App() {
           </Drawer>
 
           <Drawer
-            variant="permanent"
-            sx={{
+variant="permanent"
+sx={{
               display: { xs: 'none', sm: 'block' },
               '& .MuiDrawer-paper': {
                 width: drawerWidth,
@@ -382,15 +402,15 @@ function App() {
                 pt: 8,
               },
             }}
-            open
+open
           >
             {drawerContent}
           </Drawer>
         </Box>
 
         <Box
-          component="main"
-          sx={{
+component="main"
+sx={{
             flexGrow: 1,
             minWidth: 0,
             p: { xs: 2, sm: 3 },
@@ -408,7 +428,7 @@ function App() {
 
           <Paper sx={{ p: 3, borderRadius: 3 }}>
             <Box
-              sx={{
+sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -427,14 +447,14 @@ function App() {
               </Box>
 
               <Button
-                variant="contained"
-                startIcon={
+variant="contained"
+startIcon={
                   cargando
                     ? <CircularProgress size={18} color="inherit" />
                     : <RefreshIcon />
                 }
-                disabled={cargando}
-                onClick={consultarPacientes}
+disabled={cargando}
+onClick={consultarPacientes}
               >
                 {cargando ? 'Consultando...' : 'Listar pacientes'}
               </Button>
@@ -455,10 +475,10 @@ function App() {
 
             <Box sx={{ width: '100%', minWidth: 0 }}>
               <DataGrid
-                rows={pacientes}
-                columns={columnasPacientes}
-                loading={cargando}
-                initialState={{
+rows={pacientes}
+columns={columnasPacientes}
+loading={cargando}
+initialState={{
                   pagination: {
                     paginationModel: {
                       page: 0,
@@ -466,15 +486,15 @@ function App() {
                     },
                   },
                 }}
-                pageSizeOptions={[5, 10, 25]}
-                disableRowSelectionOnClick
-                autoHeight
-                localeText={{
+pageSizeOptions={[5, 10, 25]}
+disableRowSelectionOnClick
+autoHeight
+localeText={{
                   noRowsLabel: consultado
                     ? 'No se encontraron pacientes.'
                     : 'Presiona "Listar pacientes" para consultar.',
                 }}
-                sx={{
+sx={{
                   border: 0,
                   '& .MuiDataGrid-columnHeaders': {
                     backgroundColor: '#f8fafc',
@@ -483,6 +503,106 @@ function App() {
               />
             </Box>
           </Paper>
+
+          <Dialog
+            open={pacienteSeleccionado !== null}
+            onClose={() => setPacienteSeleccionado(null)}
+            maxWidth="md"
+            fullWidth
+            aria-labelledby="detalle-paciente-titulo"
+          >
+            <DialogTitle id="detalle-paciente-titulo">
+              Detalle del paciente
+            </DialogTitle>
+            <DialogContent dividers>
+              {pacienteSeleccionado && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box>
+                    <Typography variant="h6" fontWeight={700}>
+                      {[
+                        pacienteSeleccionado.nombres,
+                        pacienteSeleccionado.apellido_paterno,
+                        pacienteSeleccionado.apellido_materno,
+                      ].filter(Boolean).join(' ') || pacienteSeleccionado.nombre || 'Paciente'}
+                    </Typography>
+                    <Chip
+                      sx={{ mt: 1 }}
+                      size="small"
+                      variant="outlined"
+                      label={pacienteSeleccionado.estado ?? 'SIN ESTADO'}
+                      color={pacienteSeleccionado.estado === 'ACTIVO' ? 'success' : 'default'}
+                    />
+                  </Box>
+
+                  <Divider />
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Identificación y datos personales
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                    {[
+                      ['ID', pacienteSeleccionado.id],
+                      ['Nombres', pacienteSeleccionado.nombres],
+                      ['Apellido paterno', pacienteSeleccionado.apellido_paterno],
+                      ['Apellido materno', pacienteSeleccionado.apellido_materno],
+                      ['Tipo de documento', pacienteSeleccionado.tipo_documento],
+                      ['Número de documento', pacienteSeleccionado.numero_documento],
+                      ['Fecha de nacimiento', pacienteSeleccionado.fecha_nacimiento],
+                      ['Sexo', pacienteSeleccionado.sexo],
+                      ['Estado civil', pacienteSeleccionado.estado_civil],
+                    ].map(([etiqueta, valor]) => (
+                      <Box key={etiqueta}>
+                        <Typography variant="caption" color="text.secondary">{etiqueta}</Typography>
+                        <Typography sx={{ overflowWrap: 'anywhere' }}>{valor ?? '—'}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  <Divider />
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Información médica básica
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Tipo de sangre</Typography>
+                      <Typography>{pacienteSeleccionado.tipo_sangre ?? '—'}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Donador de órganos</Typography>
+                      <Typography>
+                        {pacienteSeleccionado.donador_organos == null
+                          ? '—'
+                          : pacienteSeleccionado.donador_organos === true || pacienteSeleccionado.donador_organos === 'true'
+                            ? 'Sí'
+                            : 'No'}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Divider />
+                  <Typography variant="subtitle1" fontWeight={700}>
+                    Contacto y otros datos
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                    {[
+                      ['Correo', pacienteSeleccionado.correo],
+                      ['Dirección', pacienteSeleccionado.direccion],
+                      ['Ubigeo', pacienteSeleccionado.ubigeo],
+                      ['Ocupación', pacienteSeleccionado.ocupacion],
+                      ['Última modificación', pacienteSeleccionado.modificado_en],
+                    ].map(([etiqueta, valor]) => (
+                      <Box key={etiqueta}>
+                        <Typography variant="caption" color="text.secondary">{etiqueta}</Typography>
+                        <Typography sx={{ overflowWrap: 'anywhere' }}>{valor ?? '—'}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setPacienteSeleccionado(null)}>Cerrar</Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </Box>
     </>
