@@ -21,7 +21,9 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  MenuItem,
   Paper,
+  TextField,
   Toolbar,
   Typography,
 } from '@mui/material'
@@ -36,6 +38,7 @@ import LocalHospitalIcon from '@mui/icons-material/LocalHospital'
 import { DataGrid } from '@mui/x-data-grid'
 
 import VisibilityIcon from '@mui/icons-material/Visibility'
+import SearchIcon from '@mui/icons-material/Search'
 
 const drawerWidth = 240
 
@@ -58,35 +61,35 @@ function App() {
       field: 'tipo_documento',
       headerName: 'Tipo Doc.',
       width: 110,
-valueFormatter: (value) => value ?? '—',
+      valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'numero_documento',
       headerName: 'N.º Documento',
       width: 155,
-valueFormatter: (value) => value ?? '—',
+      valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'correo',
       headerName: 'Correo electrónico',
       flex: 1,
       minWidth: 220,
-valueFormatter: (value) => value ?? '—',
+      valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'estado',
       headerName: 'Estado',
       width: 130,
-renderCell: (params) => (
+      renderCell: (params) => (
         <Chip
-label={params.value}
-color={
+          label={params.value}
+          color={
             params.value === 'ACTIVO'
               ? 'success'
               : 'default'
           }
-size="small"
-variant="outlined"
+          size="small"
+          variant="outlined"
         />
       ),
     },
@@ -121,12 +124,37 @@ variant="outlined"
   const [consultado, setConsultado] = useState(false)
 
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null)
+  const [busqueda, setBusqueda] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState('TODOS')
+
+  const totalActivos = pacientes.filter((p) => p.estado === 'ACTIVO').length
+  const totalInactivos = pacientes.filter((p) => p.estado === 'INACTIVO').length
+  const normalizar = (valor) => String(valor ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+
+  const termino = normalizar(busqueda)
+  const pacientesFiltrados = pacientes.filter((paciente) => {
+    const coincideEstado = filtroEstado === 'TODOS' || paciente.estado === filtroEstado
+    const nombreCompleto = [
+      paciente.nombre,
+      paciente.nombres,
+      paciente.apellido_paterno,
+      paciente.apellido_materno,
+    ].filter(Boolean).join(' ')
+    const coincideBusqueda = !termino || normalizar(nombreCompleto).includes(termino) ||
+      normalizar(paciente.numero_documento).includes(termino)
+    return coincideEstado && coincideBusqueda
+  })
 
   const consultarPacientes = async () => {
-setCargando(true)
-setErrorConsulta('')
-setPacientes([])
-setConsultado(false)
+    setCargando(true)
+    setErrorConsulta('')
+    setPacientes([])
+    setConsultado(false)
+    setPacienteSeleccionado(null)
 
     try {
       const token = auth.user?.access_token
@@ -179,23 +207,23 @@ setConsultado(false)
         throw new Error('La API devolvió una respuesta inesperada.')
       }
 
-setPacientes(data.pacientes)
-setConsultado(true)
+      setPacientes(data.pacientes)
+      setConsultado(true)
     } catch (error) {
-setErrorConsulta(
+      setErrorConsulta(
         error instanceof Error
           ? error.message
           : 'No se pudo consultar pacientes.'
       )
     } finally {
-setCargando(false)
+      setCargando(false)
     }
   }
 
   if (auth.isLoading) {
     return (
       <Box
-sx={{
+        sx={{
           minHeight: '100vh',
           display: 'flex',
           alignItems: 'center',
@@ -216,8 +244,8 @@ sx={{
           {auth.error.message}
         </Alert>
         <Button
-variant="contained"
-onClick={() => auth.signinRedirect()}
+          variant="contained"
+          onClick={() => auth.signinRedirect()}
         >
           Reintentar autenticación
         </Button>
@@ -230,7 +258,7 @@ onClick={() => auth.signinRedirect()}
       <>
         <CssBaseline />
         <Box
-sx={{
+          sx={{
             minHeight: '100vh',
             display: 'flex',
             alignItems: 'center',
@@ -240,8 +268,8 @@ sx={{
           }}
         >
           <Paper
-elevation={3}
-sx={{
+            elevation={3}
+            sx={{
               p: 5,
               textAlign: 'center',
               maxWidth: 420,
@@ -250,8 +278,8 @@ sx={{
             }}
           >
             <LocalHospitalIcon
-color="primary"
-sx={{ fontSize: 54, mb: 2 }}
+              color="primary"
+              sx={{ fontSize: 54, mb: 2 }}
             />
 
             <Typography variant="h4" fontWeight={700} gutterBottom>
@@ -263,10 +291,10 @@ sx={{ fontSize: 54, mb: 2 }}
             </Typography>
 
             <Button
-variant="contained"
-size="large"
-fullWidth
-onClick={() => auth.signinRedirect()}
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={() => auth.signinRedirect()}
             >
               Iniciar sesión con Descope
             </Button>
@@ -291,8 +319,8 @@ onClick={() => auth.signinRedirect()}
 
       <List>
         <ListItemButton
-selected
-onClick={() => setMobileOpen(false)}
+          selected
+          onClick={() => setMobileOpen(false)}
         >
           <ListItemIcon>
             <PeopleIcon />
@@ -305,8 +333,8 @@ onClick={() => setMobileOpen(false)}
             <HistoryIcon />
           </ListItemIcon>
           <ListItemText
-primary="Historial"
-secondary="Próximamente"
+            primary="Historial"
+            secondary="Próximamente"
           />
         </ListItemButton>
       </List>
@@ -319,32 +347,32 @@ secondary="Próximamente"
 
       <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f4f6f8' }}>
         <AppBar
-position="fixed"
-sx={{
-zIndex: (theme) => theme.zIndex.drawer + 1,
+          position="fixed"
+          sx={{
+            zIndex: (theme) => theme.zIndex.drawer + 1,
           }}
         >
           <Toolbar>
             <IconButton
-color="inherit"
-edge="start"
-onClick={() => setMobileOpen(!mobileOpen)}
-sx={{ mr: 2, display: { sm: 'none' } }}
-aria-label="Abrir menú"
+              color="inherit"
+              edge="start"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              sx={{ mr: 2, display: { sm: 'none' } }}
+              aria-label="Abrir menú"
             >
               <MenuIcon />
             </IconButton>
 
             <Typography
-variant="h6"
-noWrap
-sx={{ flexGrow: 1 }}
+              variant="h6"
+              noWrap
+              sx={{ flexGrow: 1 }}
             >
               Gestión de Pacientes
             </Typography>
 
             <Avatar
-sx={{
+              sx={{
                 width: 32,
                 height: 32,
                 bgcolor: 'secondary.main',
@@ -355,17 +383,17 @@ sx={{
             </Avatar>
 
             <Typography
-variant="body2"
-sx={{ mr: 2, display: { xs: 'none', md: 'block' } }}
+              variant="body2"
+              sx={{ mr: 2, display: { xs: 'none', md: 'block' } }}
             >
               {email}
             </Typography>
 
             <IconButton
-color="inherit"
-onClick={() => auth.removeUser()}
-aria-label="Cerrar sesión local"
-title="Cerrar sesión local"
+              color="inherit"
+              onClick={() => auth.removeUser()}
+              aria-label="Cerrar sesión local"
+              title="Cerrar sesión local"
             >
               <LogoutIcon />
             </IconButton>
@@ -373,15 +401,15 @@ title="Cerrar sesión local"
         </AppBar>
 
         <Box
-component="nav"
-sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+          component="nav"
+          sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
         >
           <Drawer
-variant="temporary"
-open={mobileOpen}
-onClose={() => setMobileOpen(false)}
-ModalProps={{ keepMounted: true }}
-sx={{
+            variant="temporary"
+            open={mobileOpen}
+            onClose={() => setMobileOpen(false)}
+            ModalProps={{ keepMounted: true }}
+            sx={{
               display: { xs: 'block', sm: 'none' },
               '& .MuiDrawer-paper': {
                 width: drawerWidth,
@@ -393,8 +421,8 @@ sx={{
           </Drawer>
 
           <Drawer
-variant="permanent"
-sx={{
+            variant="permanent"
+            sx={{
               display: { xs: 'none', sm: 'block' },
               '& .MuiDrawer-paper': {
                 width: drawerWidth,
@@ -402,15 +430,15 @@ sx={{
                 pt: 8,
               },
             }}
-open
+            open
           >
             {drawerContent}
           </Drawer>
         </Box>
 
         <Box
-component="main"
-sx={{
+          component="main"
+          sx={{
             flexGrow: 1,
             minWidth: 0,
             p: { xs: 2, sm: 3 },
@@ -428,7 +456,7 @@ sx={{
 
           <Paper sx={{ p: 3, borderRadius: 3 }}>
             <Box
-sx={{
+              sx={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -447,14 +475,14 @@ sx={{
               </Box>
 
               <Button
-variant="contained"
-startIcon={
+                variant="contained"
+                startIcon={
                   cargando
                     ? <CircularProgress size={18} color="inherit" />
                     : <RefreshIcon />
                 }
-disabled={cargando}
-onClick={consultarPacientes}
+                disabled={cargando}
+                onClick={consultarPacientes}
               >
                 {cargando ? 'Consultando...' : 'Listar pacientes'}
               </Button>
@@ -473,12 +501,62 @@ onClick={consultarPacientes}
             )}
 
 
+            {consultado && (
+              <>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2, mb: 3 }}>
+                  {[
+                    ['Total de pacientes', pacientes.length, 'primary.main'],
+                    ['Activos', totalActivos, 'success.main'],
+                    ['Inactivos', totalInactivos, 'text.secondary'],
+                  ].map(([etiqueta, cantidad, color]) => (
+                    <Paper key={etiqueta} variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                      <Typography variant="body2" color="text.secondary">{etiqueta}</Typography>
+                      <Typography variant="h4" fontWeight={700} sx={{ color }}>{cantidad}</Typography>
+                    </Paper>
+                  ))}
+                </Box>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2, alignItems: 'center' }}>
+                  <TextField
+                    label="Buscar paciente"
+                    placeholder="Nombre o número de documento"
+                    size="small"
+                    value={busqueda}
+                    onChange={(event) => setBusqueda(event.target.value)}
+                    sx={{ flex: '1 1 260px' }}
+                    InputProps={{ startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} /> }}
+                  />
+                  <TextField
+                    select
+                    label="Estado"
+                    size="small"
+                    value={filtroEstado}
+                    onChange={(event) => setFiltroEstado(event.target.value)}
+                    sx={{ minWidth: 160 }}
+                  >
+                    <MenuItem value="TODOS">Todos</MenuItem>
+                    <MenuItem value="ACTIVO">Activos</MenuItem>
+                    <MenuItem value="INACTIVO">Inactivos</MenuItem>
+                  </TextField>
+                  <Button
+                    variant="outlined"
+                    disabled={!busqueda && filtroEstado === 'TODOS'}
+                    onClick={() => { setBusqueda(''); setFiltroEstado('TODOS') }}
+                  >
+                    Limpiar filtros
+                  </Button>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Mostrando {pacientesFiltrados.length} de {pacientes.length} pacientes
+                </Typography>
+              </>
+            )}
+
             <Box sx={{ width: '100%', minWidth: 0 }}>
               <DataGrid
-rows={pacientes}
-columns={columnasPacientes}
-loading={cargando}
-initialState={{
+                rows={pacientesFiltrados}
+                columns={columnasPacientes}
+                loading={cargando}
+                initialState={{
                   pagination: {
                     paginationModel: {
                       page: 0,
@@ -486,15 +564,15 @@ initialState={{
                     },
                   },
                 }}
-pageSizeOptions={[5, 10, 25]}
-disableRowSelectionOnClick
-autoHeight
-localeText={{
+                pageSizeOptions={[5, 10, 25]}
+                disableRowSelectionOnClick
+                autoHeight
+                localeText={{
                   noRowsLabel: consultado
-                    ? 'No se encontraron pacientes.'
+                    ? 'No hay pacientes que coincidan con la búsqueda o los filtros.'
                     : 'Presiona "Listar pacientes" para consultar.',
                 }}
-sx={{
+                sx={{
                   border: 0,
                   '& .MuiDataGrid-columnHeaders': {
                     backgroundColor: '#f8fafc',
