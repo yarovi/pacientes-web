@@ -42,32 +42,57 @@ const drawerWidth = 240
 
 function App() {
 
+
   const columnasPacientes = [
     {
       field: 'id',
       headerName: 'ID',
-      width: 100,
+      width: 75,
     },
     {
       field: 'nombre',
-      headerName: 'Nombre',
+      headerName: 'Paciente',
       flex: 1,
-      minWidth: 180,
+      minWidth: 170,
+    },
+    {
+      field: 'tipo_documento',
+      headerName: 'Tipo Doc.',
+      width: 110,
+      valueFormatter: (value) => value ?? '—',
+    },
+    {
+      field: 'numero_documento',
+      headerName: 'N.º Documento',
+      width: 155,
+      valueFormatter: (value) => value ?? '—',
+    },
+    {
+      field: 'correo',
+      headerName: 'Correo electrónico',
+      flex: 1,
+      minWidth: 220,
+      valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'estado',
       headerName: 'Estado',
-      width: 150,
+      width: 130,
       renderCell: (params) => (
         <Chip
           label={params.value}
-          color={params.value === 'ACTIVO' ? 'success' : 'default'}
+          color={
+            params.value === 'ACTIVO'
+              ? 'success'
+              : 'default'
+          }
           size="small"
           variant="outlined"
         />
       ),
     },
   ]
+
 
   const auth = useAuth()
 
