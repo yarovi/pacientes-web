@@ -8,13 +8,17 @@ import PacientesFiltros from '../components/pacientes/PacientesFiltros'
 import PacientesTabla from '../components/pacientes/PacientesTabla'
 import PacienteDetalleDialog from '../components/pacientes/PacienteDetalleDialog'
 
-export default function PacientesPage({ token }) {
+import PacienteCrearDialog from '../components/pacientes/PacienteCrearDialog'
+
+export default function PacientesPage({ token, puedeCrear = false, }) {
   const { pacientes, cargando, errorConsulta, consultado, consultarPacientes } = usePacientes()
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('TODOS')
   const { totalActivos, totalInactivos } = contarPacientesPorEstado(pacientes)
   const pacientesFiltrados = filtrarPacientes(pacientes, busqueda, filtroEstado)
+
+  const [crearPacienteAbierto, setCrearPacienteAbierto] = useState(false)
 
   const ejecutarConsulta = () => {
     setPacienteSeleccionado(null)
@@ -31,6 +35,15 @@ export default function PacientesPage({ token }) {
             <Typography variant="h6">Listado de pacientes</Typography>
             <Typography variant="body2" color="text.secondary">Información obtenida desde Zuplo.</Typography>
           </Box>
+          {puedeCrear && (
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => setCrearPacienteAbierto(true)}
+            >
+              Nuevo paciente
+            </Button>
+          )}
           <Button variant="contained" startIcon={cargando ? <CircularProgress size={18} color="inherit" /> : <RefreshIcon />} disabled={cargando} onClick={ejecutarConsulta}>
             {cargando ? 'Consultando...' : 'Listar pacientes'}
           </Button>
@@ -46,6 +59,15 @@ export default function PacientesPage({ token }) {
         <PacientesTabla pacientes={pacientesFiltrados} cargando={cargando} consultado={consultado} onVerPaciente={setPacienteSeleccionado} />
       </Paper>
       <PacienteDetalleDialog pacienteSeleccionado={pacienteSeleccionado} onClose={() => setPacienteSeleccionado(null)} />
+
+      <PacienteCrearDialog
+        open={puedeCrear && crearPacienteAbierto}
+        onClose={() => setCrearPacienteAbierto(false)}
+        onCreado={ejecutarConsulta}
+        token={token}
+      />
     </>
+
+
   )
 }
